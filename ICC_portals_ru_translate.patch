@@ -1,0 +1,87 @@
+diff --git a/sql/custom/world/ICC_portals_ru_translate.sql b/sql/custom/world/ICC_portals_ru_translate.sql
+new file mode 100644
+index 0000000..84a99b1
+--- /dev/null
++++ b/sql/custom/world/ICC_portals_ru_translate.sql
+@@ -0,0 +1,12 @@
++-- Руссификация порталов в ЦЛК.
++SET @STRING_ENTRY := 11300;
++
++-- DELETE FROM `trinity_string` WHERE `entry` IN (@STRING_ENTRY+0, @STRING_ENTRY+1, @STRING_ENTRY+2, @STRING_ENTRY+3, @STRING_ENTRY+4, @STRING_ENTRY+5, @STRING_ENTRY+6);
++INSERT INTO `trinity_string` (`entry`, `content_default`, `content_loc8`) VALUES
++(@STRING_ENTRY+0, "Teleport to Light\'s Hammer.", "Перенестись в Молот Света."), 
++(@STRING_ENTRY+1, "Teleport to the Oratory of the Damned.", "Перенестись в молельню Проклятых."), 
++(@STRING_ENTRY+2, "Teleport to the Rampart of Skulls.", "Перенестись на Черепной вал."),
++(@STRING_ENTRY+3, "Teleport to the Deathbringer\'s Rise.", "Перенестись на Подъем Смертоносного."), 
++(@STRING_ENTRY+4, "Teleport to the Upper Spire.", "Перенестись на верхний ярус."),
++(@STRING_ENTRY+5, "Teleport to Sindragosa\'s Lair.", "Перенестись в логово Синдрагосы."),
++(@STRING_ENTRY+6, "Teleport to the Frozen Throne.", "Перенестись к Ледяному Трону.");
+\ No newline at end of file
+diff --git a/src/server/game/Miscellaneous/Language.h b/src/server/game/Miscellaneous/Language.h
+index 62c2a3a..a927e80 100644
+--- a/src/server/game/Miscellaneous/Language.h
++++ b/src/server/game/Miscellaneous/Language.h
+@@ -1189,6 +1189,14 @@ enum TrinityStrings
+     LANG_AUTO_BROADCAST                 = 11000,
+     LANG_INVALID_REALMID                = 11001,
+ 
++    LANG_TELEPORT_TO_LH			= 11300,
++    LANG_TELEPORT_TO_OTD		= 11301,
++    LANG_TELEPORT_TO_RS			= 11302,
++    LANG_TELEPORT_TO_DR			= 11303,
++    LANG_TELEPORT_TO_US			= 11304,
++    LANG_TELEPORT_TO_SL			= 11305,
++    LANG_TELEPORT_TO_FT			= 11306,
++
+     // Show Kick in world
+     LANG_COMMAND_KICKMESSAGE_WORLD = 11002,
+ 
+diff --git a/src/server/scripts/Northrend/IcecrownCitadel/icecrown_citadel_teleport.cpp b/src/server/scripts/Northrend/IcecrownCitadel/icecrown_citadel_teleport.cpp
+index 7723a37..c559fa1 100644
+--- a/src/server/scripts/Northrend/IcecrownCitadel/icecrown_citadel_teleport.cpp
++++ b/src/server/scripts/Northrend/IcecrownCitadel/icecrown_citadel_teleport.cpp
+@@ -21,6 +21,9 @@
+ #include "ScriptMgr.h"
+ #include "Spell.h"
+ #include "icecrown_citadel.h"
++#include "Language.h"
++#include "ObjectMgr.h"
++#include "WorldSession.h"
+ 
+ #define GOSSIP_SENDER_ICC_PORT 631
+ 
+@@ -31,24 +34,28 @@ class icecrown_citadel_teleport : public GameObjectScript
+ 
+         bool OnGossipHello(Player* player, GameObject* go) override
+         {
++			WorldSession* session = player->GetSession();
++
+             if (InstanceScript* instance = go->GetInstanceScript())
+             {
+                 if (instance->GetBossState(DATA_LORD_MARROWGAR) == DONE)
+                 {
+                     if (go->GetEntry() != GO_SCOURGE_TRANSPORTER_LIGHTSHAMMER)
+-                        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to Light's Hammer.", GOSSIP_SENDER_ICC_PORT, LIGHT_S_HAMMER_TELEPORT);
++						player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, session->GetTrinityString(LANG_TELEPORT_TO_LH), GOSSIP_SENDER_ICC_PORT, LIGHT_S_HAMMER_TELEPORT);
+                     if (go->GetEntry() != GO_SCOURGE_TRANSPORTER_ORATORY)
+-                        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Oratory of the Damned.", GOSSIP_SENDER_ICC_PORT, ORATORY_OF_THE_DAMNED_TELEPORT);
++						player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, session->GetTrinityString(LANG_TELEPORT_TO_OTD), GOSSIP_SENDER_ICC_PORT, ORATORY_OF_THE_DAMNED_TELEPORT);
+                 }
+                 if (instance->GetBossState(DATA_LADY_DEATHWHISPER) == DONE && go->GetEntry() != GO_SCOURGE_TRANSPORTER_RAMPART)
+-                    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Rampart of Skulls.", GOSSIP_SENDER_ICC_PORT, RAMPART_OF_SKULLS_TELEPORT);
++					player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, session->GetTrinityString(LANG_TELEPORT_TO_RS), GOSSIP_SENDER_ICC_PORT, RAMPART_OF_SKULLS_TELEPORT);
+                 if (instance->GetBossState(DATA_ICECROWN_GUNSHIP_BATTLE) == DONE && go->GetEntry() != GO_SCOURGE_TRANSPORTER_DEATHBRINGER)
+-                    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Deathbringer's Rise.", GOSSIP_SENDER_ICC_PORT, DEATHBRINGER_S_RISE_TELEPORT);
++					player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, session->GetTrinityString(LANG_TELEPORT_TO_DR), GOSSIP_SENDER_ICC_PORT, DEATHBRINGER_S_RISE_TELEPORT);
+                 if (instance->GetData(DATA_UPPERSPIRE_TELE_ACT) == DONE && go->GetEntry() != GO_SCOURGE_TRANSPORTER_UPPERSPIRE)
+-                    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to the Upper Spire.", GOSSIP_SENDER_ICC_PORT, UPPER_SPIRE_TELEPORT);
++					player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, session->GetTrinityString(LANG_TELEPORT_TO_US), GOSSIP_SENDER_ICC_PORT, UPPER_SPIRE_TELEPORT);
+                 /// @todo Gauntlet event before Sindragosa
+                 if (instance->GetBossState(DATA_VALITHRIA_DREAMWALKER) == DONE && go->GetEntry() != GO_SCOURGE_TRANSPORTER_SINDRAGOSA)
+-                    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Teleport to Sindragosa's Lair", GOSSIP_SENDER_ICC_PORT, SINDRAGOSA_S_LAIR_TELEPORT);
++					player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, session->GetTrinityString(LANG_TELEPORT_TO_SL), GOSSIP_SENDER_ICC_PORT, SINDRAGOSA_S_LAIR_TELEPORT);
++				if (instance->GetBossState(DATA_PROFESSOR_PUTRICIDE) == DONE && instance->GetBossState(DATA_BLOOD_QUEEN_LANA_THEL) == DONE && instance->GetBossState(DATA_SINDRAGOSA) == DONE)
++					player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, session->GetTrinityString(LANG_TELEPORT_TO_FT), GOSSIP_SENDER_ICC_PORT, FROZEN_THRONE_TELEPORT);
+             }
+ 
+             player->SEND_GOSSIP_MENU(player->GetGossipTextId(go), go->GetGUID());
