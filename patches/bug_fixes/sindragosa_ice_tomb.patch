@@ -1,0 +1,33 @@
+diff --git a/src/server/game/Entities/Object/Object.cpp b/src/server/game/Entities/Object/Object.cpp
+index 4877ff0..28e8033 100644
+--- a/src/server/game/Entities/Object/Object.cpp
++++ b/src/server/game/Entities/Object/Object.cpp
+@@ -1145,6 +1145,15 @@ bool WorldObject::IsWithinLOSInMap(const WorldObject* obj) const
+ {
+     if (!IsInMap(obj))
+         return false;
++	
++    // hack for ice tomb's gameobject
++    if (obj->GetTypeId() == TYPEID_UNIT)
++        if (obj->GetEntry() == 36980 /* Ice Tomb */)
++            return true;
++    if (GetTypeId() == TYPEID_UNIT)
++        if (GetEntry() == 36980 /* Ice Tomb */)
++            return true;
++	
+ 
+     float ox, oy, oz;
+     obj->GetPosition(ox, oy, oz);
+diff --git a/src/server/scripts/Northrend/IcecrownCitadel/boss_sindragosa.cpp b/src/server/scripts/Northrend/IcecrownCitadel/boss_sindragosa.cpp
+index 9bdbce8..cb414c8 100644
+--- a/src/server/scripts/Northrend/IcecrownCitadel/boss_sindragosa.cpp
++++ b/src/server/scripts/Northrend/IcecrownCitadel/boss_sindragosa.cpp
+@@ -347,7 +347,7 @@ class boss_sindragosa : public CreatureScript
+                         events.ScheduleEvent(EVENT_AIR_MOVEMENT, 1);
+                         break;
+                     case POINT_AIR_PHASE:
+-                        me->CastCustomSpell(SPELL_ICE_TOMB_TARGET, SPELLVALUE_MAX_TARGETS, RAID_MODE<int32>(2, 5, 2, 6), NULL, TRIGGERED_FULL_MASK);
++                        me->CastCustomSpell(SPELL_ICE_TOMB_TARGET, SPELLVALUE_MAX_TARGETS, RAID_MODE<int32>(2, 5, 2, 6), false, TRIGGERED_FULL_MASK);
+                         me->SetFacingTo(float(M_PI));
+                         events.ScheduleEvent(EVENT_AIR_MOVEMENT_FAR, 1);
+                         events.ScheduleEvent(EVENT_FROST_BOMB, 9000);
